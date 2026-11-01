@@ -1,0 +1,4 @@
+This starter kit is provided as an educational software example without warranty.
+You are responsible for checking the licenses and terms of the base model, dependencies,
+datasets, and source documents. Sample engineering content is illustrative only.
+No part of this kit is a substitute for qualified engineering review or approved project design.
