@@ -6,6 +6,21 @@ export default function App() {
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
 
+  async function readResponse(response) {
+    const body = await response.text();
+    const contentType = response.headers.get("content-type") || "";
+
+    if (contentType.includes("application/json")) {
+      try {
+        return JSON.parse(body);
+      } catch {
+        return { detail: body || "The server returned invalid JSON." };
+      }
+    }
+
+    return { detail: body.trim() || `Server returned HTTP ${response.status}.` };
+  }
+
   async function submitPrompt(event) {
     event.preventDefault();
     setBusy(true);
@@ -18,10 +33,23 @@ export default function App() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ prompt }),
       });
-      const result = await response.json();
+      const result = await readResponse(response);
 
       if (!response.ok) {
-        throw new Error(result.detail || "The request could not be completed.");
+        if (response.status === 401 || response.status === 403) {
+          throw new Error(
+            "The request was not authorized. Reopen the current tunnel URL and complete its email verification, then try again.",
+          );
+        }
+        throw new Error(
+          result.detail || `The request failed with HTTP ${response.status}.`,
+        );
+      }
+
+      if (typeof result.text !== "string") {
+        throw new Error(
+          "The inference server returned an unexpected response. Check that the React UI and FastAPI server use the same tunnel URL.",
+        );
       }
 
       setAnswer(result.text);
